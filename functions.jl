@@ -79,7 +79,7 @@ Compute the gradient of the convex conjugate of the quadratic
 
 """
 function grad_quadconj(y,Q,q)
-
+	inv(Q)*(x.-q)
 end
 
 
