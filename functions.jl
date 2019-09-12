@@ -7,7 +7,7 @@ Compute the quadratic
 
 """
 function quad(x,Q,q)
-	return 1/2 * x'*Q*x + q'*x
+	return 1/2 * transpose(x)*Q*x + transpose(q)*x
 end
 
 
@@ -21,6 +21,7 @@ Compute the convex conjugate of the quadratic
 
 """
 function quadconj(y,Q,q)
+	retunr 1/2 transpose(y-q)*Q*(y-q)
 
 end
 
@@ -110,7 +111,7 @@ for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_boxconj(y,a,b,gamma)
-
+	return z - prox_box(x,a,b,gamma)
 end
 
 
