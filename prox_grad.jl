@@ -4,11 +4,21 @@ include("functions.jl")
 include("problem.jl")
 
 Q,q,a,b = problem_data()
-ITER = 100
-x_k = zeros((length(a)))
-L = norm(inv(Q),2)
-gamma = range(0,stop = L/2, length = 10)
 
-for i = 1:ITER
-    x_k1 = prox_boxconj(x_k - gamma)
+function proxi_gradient(Q,q,a,b)
+    ITER = 100
+    mt = MersenneTwister(123)
+    x_k = randn(mt,length(a))
+    res = zeros(length(ITER))
+    L = norm(Q,2)
+    gamma = range(0,stop = L/2, length = 10)
+    x_k1 = similar(x_k)
+
+    for i = 1:ITER
+        x_k1 = prox_box(x_k - gamma[4]*grad_quad(x_k,Q,q), a, b, gamma[4])
+        res[i] = norm(x_k1 - x_k)
+        x_k = x_k1
+    end
 end
+
+proxi_gradient(Q,q,a,b)

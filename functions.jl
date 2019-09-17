@@ -52,12 +52,12 @@ Compute the convex conjugate of the indicator function of for the box contraint
 where the inequalites are applied element-wise.
 """
 function boxconj(y,a,b)
-	box_conj = similar(y)
+	box_conj = 0
 	for i=1:length(y)
 		if (y[i] < 0)
-			box_conj[i] = a[i]*y[i]
+			box_conj += a[i]*y[i]
 		else
-			box_conj[i] = b[i]*y[i]
+			box_conj += b[i]*y[i]
 		end
 	end
 	return box_conj
@@ -103,12 +103,12 @@ Compute the proximal operator of the indicator function for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_box(x,a,b,gamma)
-	proxbox = similar(x)
+	proxbox = zeros(length(x))
 	for i = 1:length(x)
-		if (x[i] > b)
-			proxbox[i] = b
-		elseif (x[i] < a)
-			proxbox[i] = a
+		if x[i] > b[i]
+			proxbox[i] = b[i]
+		elseif x[i] < a[i]
+			proxbox[i] = a[i]
 		else
 			proxbox[i] = x[i]
 		end
@@ -129,7 +129,7 @@ for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_boxconj(y,a,b,gamma)
-	return y - prox_box(y,a,b,gamma)
+	return (y - prox_box(y,a,b,gamma))
 end
 
 
