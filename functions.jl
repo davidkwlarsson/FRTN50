@@ -21,7 +21,7 @@ Compute the convex conjugate of the quadratic
 
 """
 function quadconj(y,Q,q)
-	retunr 1/2 transpose(y-q)*Q*(y-q)
+	retunr 1/2 transpose(y-q)*inv(Q)*(y-q)
 
 end
 
@@ -52,7 +52,12 @@ Compute the convex conjugate of the indicator function of for the box contraint
 where the inequalites are applied element-wise.
 """
 function boxconj(y,a,b)
-
+	box_conj = similar(y)
+	if(y[i] < 0)
+		box_conj = a[i]*y[i]
+	else
+		box_conj = b[i]*y[i]
+	return box_conj
 end
 
 
@@ -80,7 +85,7 @@ Compute the gradient of the convex conjugate of the quadratic
 
 """
 function grad_quadconj(y,Q,q)
-	inv(Q)*(x.-q)
+	return inv(Q)*(y.-q)
 end
 
 
@@ -95,7 +100,7 @@ Compute the proximal operator of the indicator function for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_box(x,a,b,gamma)
-
+	
 end
 
 
@@ -111,7 +116,7 @@ for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_boxconj(y,a,b,gamma)
-	return z - prox_box(x,a,b,gamma)
+	return y - prox_box(y,a,b,gamma)
 end
 
 
@@ -121,6 +126,6 @@ end
 Computes the solution to the primal problem for Hand-In 1 given a solution y to
 the dual problem.
 """
-function dual2primal(y,Q,q,a,b)	
+function dual2primal(y,Q,q,a,b)
 	return grad_quadconj(y,Q,q)
 end
