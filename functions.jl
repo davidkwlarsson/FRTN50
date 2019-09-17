@@ -121,6 +121,6 @@ end
 Computes the solution to the primal problem for Hand-In 1 given a solution y to
 the dual problem.
 """
-function dual2primal(y,Q,q,a,b)
-
+function dual2primal(y,Q,q,a,b)	
+	return grad_quadconj(y,Q,q)
 end
