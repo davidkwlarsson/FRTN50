@@ -21,7 +21,7 @@ Compute the convex conjugate of the quadratic
 
 """
 function quadconj(y,Q,q)
-	retunr 1/2 transpose(y-q)*inv(Q)*(y-q)
+	return 1/2*transpose(y-q)*inv(Q)*(y-q)
 
 end
 
@@ -53,10 +53,13 @@ where the inequalites are applied element-wise.
 """
 function boxconj(y,a,b)
 	box_conj = similar(y)
-	if(y[i] < 0)
-		box_conj = a[i]*y[i]
-	else
-		box_conj = b[i]*y[i]
+	for i=1:length(y)
+		if (y[i] < 0)
+			box_conj[i] = a[i]*y[i]
+		else
+			box_conj[i] = b[i]*y[i]
+		end
+	end
 	return box_conj
 end
 
@@ -100,7 +103,17 @@ Compute the proximal operator of the indicator function for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_box(x,a,b,gamma)
-	
+	proxbox = similar(x)
+	for i = 1:length(x)
+		if (x[i] > b)
+			proxbox[i] = b
+		elseif (x[i] < a)
+			proxbox[i] = a
+		else
+			proxbox[i] = x[i]
+		end
+	end
+	return proxbox
 end
 
 
