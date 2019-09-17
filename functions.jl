@@ -104,13 +104,13 @@ where the inequalites are applied element-wise.
 """
 function prox_box(x,a,b,gamma)
 	proxbox = zeros(length(x))
-	for i = 1:length(x)
-		if x[i] > b[i]
-			proxbox[i] = b[i]
-		elseif x[i] < a[i]
-			proxbox[i] = a[i]
+	for (index,value) in enumerate(x)
+		if b[index] .< x[index]
+			proxbox[index] = b[index]
+		elseif value .< a[index]
+			proxbox[index] = a[index]
 		else
-			proxbox[i] = x[i]
+			proxbox[index] = x[index]
 		end
 	end
 	return proxbox
