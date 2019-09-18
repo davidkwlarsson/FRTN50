@@ -105,7 +105,7 @@ where the inequalites are applied element-wise.
 function prox_box(x,a,b,gamma)
 	proxbox = zeros(length(x))
 	for index in eachindex(x)
-		
+
 		if b[index] < x[index]
 			proxbox[index] = b[index]
 		elseif x[index] < a[index]
@@ -130,7 +130,7 @@ for the box contraint
 where the inequalites are applied element-wise.
 """
 function prox_boxconj(y,a,b,gamma)
-	return (y - prox_box(y,a,b,gamma))
+	return (y - gamma*prox_box(y/gamma,a,b,gamma))
 end
 
 
