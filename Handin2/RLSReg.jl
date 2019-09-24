@@ -10,11 +10,11 @@ function prox_grad_method(x,y,q = 2, p = 1)
     #x = (x.-beta)*sigma
     Xt = ones(length(x))
     for i = 1:p
-        Xt = cat(Xt, x.^p, dims = 2)
+        Xt = cat(Xt, x.^i, dims = 2)
     end
     #print(size(Xt))
-    gamma = 1/norm(Xt*transpose(Xt))
-    lambda = 0
+    gamma = 1/norm(transpose(Xt)*Xt, 2)
+    lambda = 0.0
     ITER = 100
     w_k = randn(p+1)
     if (q==1)
@@ -23,14 +23,14 @@ function prox_grad_method(x,y,q = 2, p = 1)
         g = SqrNormL2(lambda)
     end
     f = LeastSquares(Xt, y, 1.0; iterative = false)
-    res = zeros(ITER)
+    #res = zeros(ITER)
     for i = 1:ITER
 
         grad_f, _ = gradient(f,w_k)
         y_k = w_k - gamma*grad_f
         w_k1, gw =  prox(g, y_k, gamma)
         w_k = w_k1
-        res[i] = norm(w_k1 - w_k, 2)
+        #res[i] = norm(w_k1 - w_k, 2)
     end
 
     return w_k
@@ -38,24 +38,30 @@ end
 
 
 function plot_model1(x,y)
-    m = zeros(length(x),10)
-    beta = maximum(x)/2
-    sigma = 2/maximum(x)
-    x = (x.-beta)*sigma
+
+
+    x1 = maximum(x)
+    x2 = minimum(x)
+    beta = (abs.(x1) - abs.(x2))/2
+    sigma = x1-beta
+    x = (x .- beta) ./ sigma
+
     plot(x,y,seriestype=:scatter)
     xtemp = LinRange(-1,1,100)
-    for i=1:10
+    p = 10
+    m = zeros(length(xtemp),p)
+    for i=1:p
         w = prox_grad_method(x,y,2,i)
         Xttemp = ones(length(xtemp))
-        for i = 1:i
-            Xttemp = cat(Xttemp, xtemp.^i, dims = 2)
+        for j = 1:i
+            Xttemp = cat(Xttemp, xtemp.^j, dims = 2)
         end
-
         m[:,i] = Xttemp*w
-        plot!(xtemp,m[:,i])
-    end
 
-    plot!(x,m[:,1:3])
+    end
+    plot!(xtemp,m[:,end])
+
+    #plot!(x,m[:,1:3])
     # print(length(m), "  :  ", length(x), "   :   ", length(y))
 end
 
