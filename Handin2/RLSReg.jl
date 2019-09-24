@@ -40,20 +40,22 @@ end
 function plot_model1(x,y)
     m = zeros(length(x),10)
     beta = maximum(x)/2
-    sigma = 1/maximum(x)
+    sigma = 2/maximum(x)
     x = (x.-beta)*sigma
-    plot(x,y)
+    plot(x,y,seriestype=:scatter)
+    xtemp = LinRange(-1,1,100)
     for i=1:10
         w = prox_grad_method(x,y,2,i)
-        Xt = ones(length(x))
+        Xttemp = ones(length(xtemp))
         for i = 1:i
-            Xt = cat(Xt, x.^i, dims = 2)
+            Xttemp = cat(Xttemp, xtemp.^i, dims = 2)
         end
-        m[:,i] = Xt*w
-        #plot!(x,m[:,i])
+
+        m[:,i] = Xttemp*w
+        plot!(xtemp,m[:,i])
     end
 
-    plot!(x,m)
+    plot!(x,m[:,1:3])
     # print(length(m), "  :  ", length(x), "   :   ", length(y))
 end
 
