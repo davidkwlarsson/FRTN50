@@ -22,8 +22,8 @@ function prediction(x,y,K)
     N = length(y)
     m = zeros(N)
     for i = 1 : N
-
-        m[i] = sign(-1/2 * x' * y[i].*K[i,:])
+        m_i = -1/2 * y[i].* transpose(x)*K[i,:]
+        m[i] = sign(m_i[1])
     end
     return m
 end
@@ -36,8 +36,6 @@ function prox_grad_method(x,y)
     Q = diagm(y)*K*diagm(y)
     gamma = 1/norm(Q,2)
     h1 = Conjugate(HingeLoss(ones(N),N))
-    #h2 = IndBox(0,0)
-    #h = SeparableSum(h1, h2)
     g = SqrNormL2(1/(2*lambda))
     w_k = randn(N)
     res = zeros(ITER)
@@ -46,14 +44,21 @@ function prox_grad_method(x,y)
         y_k = w_k - gamma*grad_g
         w_k1, hw =  prox(h1, y_k, gamma)
         w_k = w_k1
-        #println("hi")
-        yKtemp = y[1].*K[1,:]
-        for k = 2:N
-            yKtemp = cat(yKtemp, y[k].*K[k,:], dims = 1)
-        end
-        #print(w_k'*yKtemp)
-        m = prediction(w_k,y,K)
-        print(m)
+        # m = prediction(w_k,y,K)
+        # print(m .- y)
     end
-    return res
+    #m = prediction(w_k,y,K)
+    return w_k,y,K
 end
+
+
+function testSVM()
+    w_k, y, K = prox_grad_method(x_train, y_train)
+    K = GaussKernel(x)
+    m = prediction(w_k, y_train, K)
+    errors = sum(abs.(y_test.-sign.(m)))
+    print(errors)
+
+end
+
+testSVM()
