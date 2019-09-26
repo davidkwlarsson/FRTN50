@@ -6,7 +6,7 @@ include("problem.jl")
 x_train, y_train = svm_train()
 x_test, y_test = svm_test_1()
 
-function GaussKernel(x)
+function GaussKernelMatrix(x)
     N = length(x)
     K = zeros(N,N)
     sigma = 1
@@ -31,7 +31,7 @@ end
 function prox_grad_method(x,y)
     lambda = 0.01
     ITER = 1
-    K = GaussKernel(x)
+    K = GaussKernelMatrix(x)
     N = length(x)
     Q = diagm(y)*K*diagm(y)
     gamma = 1/norm(Q,2)
@@ -44,17 +44,14 @@ function prox_grad_method(x,y)
         y_k = w_k - gamma*grad_g
         w_k1, hw =  prox(h1, y_k, gamma)
         w_k = w_k1
-        # m = prediction(w_k,y,K)
-        # print(m .- y)
     end
-    #m = prediction(w_k,y,K)
     return w_k,y,K
 end
 
 
 function testSVM()
     w_k, y, K = prox_grad_method(x_train, y_train)
-    K = GaussKernel(x)
+    K = GaussKernel(x_test)
     m = prediction(w_k, y_train, K)
     errors = sum(abs.(y_test.-sign.(m)))
     print(errors)
