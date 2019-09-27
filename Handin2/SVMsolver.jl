@@ -1,10 +1,10 @@
-using ProximalOperators, LinearAlgebra, Plots
+using ProximalOperators, LinearAlgebra, Plots, Random
 
 
 include("problem.jl")
 
 
-x_test, y_test = svm_test_1()
+x_train, y_train = svm_train()
 lambda = 0.001
 sigma = 0.5
 
@@ -60,7 +60,7 @@ function prediction(dual, x)
 end
 
 
-function testSVM(x_t, y_t)
+function testSVM()
     dual = prox_grad_method(x_train, y_train)
     y_pred = similar(y_test)
     for i = 1:length(x_test)
@@ -70,24 +70,62 @@ function testSVM(x_t, y_t)
     #naive_class = -1
     naive_errors = sum(abs.(y_test.-naive_class))/2
     errors = sum(abs.(y_test.-y_pred))/2
-    print(errors, " errors out of ", length(x_test),
-            ", naive classifier errors : " , naive_errors)
-
+    println(errors, " errors out of ", length(x_test),
+        ", naive classifier errors : " , naive_errors)
+    return errors
 end
 
-lambda = 0.01
+lambda = 0.0001
 sigma = 0.5
 
 #configuration of (lambda, sigma) = (0.1, 2) (0.001, 0.5) (0.00001, 0.25)
-x_train, y_train = svm_train()
+println("lambda : " ,lambda,"     sigma: ", sigma)
+x_test, y_test = svm_test_1() #best = (0.0001, 0.5)
 testSVM()
 println("===============")
-x_train, y_train = svm_test_2()
+x_test, y_test = svm_test_2()
 testSVM()
 println("===============")
-x_train, y_train = svm_test_3()
+x_test, y_test = svm_test_3()
 testSVM()
 println("===============")
-x_train, y_train = svm_test_4()
-testSVM(x_train, y_train)
+x_test, y_test = svm_test_4()
+testSVM()
 println("\n")
+
+#NOTES : Testset2 seems best with (0.00001 , 0.25) and it classifies completely correct
+#NOTEs : For the other testsets (0.001 , 0.5) seems to be the best
+#NOTES : Testset 2 and 4 produces weird output for either.
+
+x_data, y_data = svm_train()
+index = randperm(500)
+x_data = x_data[index]
+y_data = y_data[index]
+y_train = y_data[1:end-100]
+x_train = x_data[1:end-100]
+y_test = y_data[end-99:end]
+x_test = x_data[end-99:end]
+
+println("Running SVM using hold out with parameters: (lambda , gamma) = ("
+            , lambda, " , " ,sigma ,") : ..." )
+testSVM()
+println("Running SVM using k-fold with parameters: (lambda , gamma) = ("
+            , lambda, " , " ,sigma ,") : ..." )
+
+tot_error = 0
+x_data, y_data = svm_train()
+LENGTH = length(x_data)
+batch = LENGTH/10
+for k = 1:10
+    index = randperm(LENGTH)
+    global x_data = x_data[index]
+    global y_data = y_data[index]
+    global y_train = y_data[1:end-50]
+    global x_train = x_data[1:end-50]
+    y_test = y_data[end-49:end]
+    x_test = x_data[end-49:end]
+    k_error = testSVM()
+    global tot_error += k_error
+end
+
+print("Average error over 10 iters = ", tot_error/10)
