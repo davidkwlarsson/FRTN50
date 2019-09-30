@@ -40,7 +40,7 @@ function plot_model1(x,y)
     x2 = minimum(x)
     beta = (abs.(x1) - abs.(x2))/2
     sigma = x1-beta
-    #x = (x .- beta) ./ sigma
+    x = (x .- beta) ./ sigma
 
     plot(x,y,seriestype=:scatter)
     xtemp = LinRange(minimum(x),maximum(x),100)
