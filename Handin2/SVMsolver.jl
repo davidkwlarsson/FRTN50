@@ -1,4 +1,4 @@
-using ProximalOperators, LinearAlgebra, Plots, Random
+using ProximalOperators, LinearAlgebra, Plots, Random, Statistics
 
 
 include("problem.jl")
@@ -26,7 +26,7 @@ end
 
 
 function prox_grad_method(x,y)
-    ITER = 10000
+    ITER = 100000
     K = GaussKernelMatrix(x)
     N = length(x)
     Q = 1/lambda * diagm(y)*K*diagm(y)
@@ -70,8 +70,14 @@ function testSVM()
     #naive_class = -1
     naive_errors = sum(abs.(y_test.-naive_class))/2
     errors = sum(abs.(y_test.-y_pred))/2
+    #y_pred_train = similar(y_train)
+    #for i = 1:length(x_train)
+    #    y_pred_train[i] = prediction(dual, x_train[i,:])
+    #end
     println(errors, " errors out of ", length(x_test),
         ", naive classifier errors : " , naive_errors)
+    #train_errors = sum(abs.(y_train .- y_pred_train))/2
+    #println("Train error = ", train_errors, " out of : ", length(y_train))
     return errors
 end
 
@@ -97,6 +103,7 @@ println("\n")
 #NOTEs : For the other testsets (0.001 , 0.5) seems to be the best
 #NOTES : Testset 2 and 4 produces weird output for either.
 
+
 x_data, y_data = svm_train()
 index = randperm(500)
 x_data = x_data[index]
@@ -108,7 +115,7 @@ x_test = x_data[end-99:end]
 
 println("Running SVM using hold out with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
-testSVM()
+testSVM()  #11 18  11 18 9 11 9
 println("Running SVM using k-fold with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
 
@@ -129,3 +136,4 @@ for k = 1:10
 end
 
 print("Average error over 10 iters = ", tot_error/10)
+# 1.3 1.1 1.1 1.2 1.0
