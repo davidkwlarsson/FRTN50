@@ -99,11 +99,11 @@ x_test, y_test = svm_test_4()
 testSVM()
 println("\n")
 
-#NOTES : Testset2 seems best with (0.00001 , 0.25) and it classifies completely correct
-#NOTEs : For the other testsets (0.001 , 0.5) seems to be the best
-#NOTES : Testset 2 and 4 produces weird output for either.
+#NOTES : Testset2 seems best with (0.00001 , 0.25) and it classifies completely correct.
+#NOTEs : For the other testsets (0.001 , 0.5) seems to be the best.
+#NOTES : Testset 2 and 4 produces weird output for errors.
 
-
+#Comparing hold out to k-fold below:
 x_data, y_data = svm_train()
 index = randperm(500)
 x_data = x_data[index]
@@ -115,7 +115,7 @@ x_test = x_data[end-99:end]
 
 println("Running SVM using hold out with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
-testSVM()  #11 18  11 18 9 11 9
+testSVM()  # Data from some runs : 11 18  11 18 9 11 9
 println("Running SVM using k-fold with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
 
@@ -136,4 +136,4 @@ for k = 1:10
 end
 
 print("Average error over 10 iters = ", tot_error/10)
-# 1.3 1.1 1.1 1.2 1.0
+# Data for some runs : 1.3 1.1 1.1 1.2 1.0
