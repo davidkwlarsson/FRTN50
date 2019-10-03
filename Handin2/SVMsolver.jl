@@ -123,14 +123,25 @@ tot_error = 0
 x_data, y_data = svm_train()
 LENGTH = length(x_data)
 batch = LENGTH/10
-for k = 1:10
-    index = randperm(LENGTH)
-    global x_data = x_data[index]
-    global y_data = y_data[index]
-    global y_train = y_data[1:end-50]
-    global x_train = x_data[1:end-50]
-    y_test = y_data[end-49:end]
-    x_test = x_data[end-49:end]
+index = randperm(LENGTH)
+global x_data = x_data[index]
+global y_data = y_data[index]
+for k = 0:9
+    global y_test = y_data[50*k+1:50*(k+1)]
+    global x_test = x_data[50*k+1:50*(k+1)]
+    if k < 9
+        global y_train = y_data[50*(k+1)+1:end]
+        global x_train = x_data[50*(k+1)+1:end]
+    end
+    if k == 9
+        global y_train = y_data[1:end-49]
+        global x_train = x_data[1:end-49]
+    elseif k > 0
+        global y_train = cat(y_data[1:50*k], y_train, dims = 1)
+        global x_train = cat(x_data[1:50*k], x_train, dims = 1)
+    end
+    println(length(y_train), " y and x ", length(x_train))
+    println(length(y_test), " y and  x ", length(x_test))
     k_error = testSVM()
     global tot_error += k_error
 end
