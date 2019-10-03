@@ -1,13 +1,7 @@
 using ProximalOperators, LinearAlgebra, Plots, Random, Statistics
 
-
 include("problem.jl")
-
-
 x_train, y_train = svm_train()
-lambda = 0.001
-sigma = 0.5
-
 
 function GaussKernelMatrix(x)
     N = length(x)
@@ -123,14 +117,22 @@ tot_error = 0
 x_data, y_data = svm_train()
 LENGTH = length(x_data)
 batch = LENGTH/10
-for k = 1:10
-    index = randperm(LENGTH)
-    global x_data = x_data[index]
-    global y_data = y_data[index]
-    global y_train = y_data[1:end-50]
-    global x_train = x_data[1:end-50]
-    y_test = y_data[end-49:end]
-    x_test = x_data[end-49:end]
+index = randperm(LENGTH)
+global x_data = x_data[index]
+global y_data = y_data[index]
+for k = 0:9
+    global y_test = y_data[50*k+1:50+50*k]
+    global x_test = x_data[50*k+1:50+50*k]
+    if k == 0
+        global x_train = x_data[51:end]
+        global y_train = y_data[51:end]
+    elseif k == 9
+        global x_train = x_data[1:end-50]
+        global y_train = y_data[1:end-50]
+    else
+        global x_train = cat(x_data[1:50*k], x_data[51 + 50*k:end], dims=1)
+        global y_train = cat(y_data[1:50*k], y_data[51 + 50*k:end], dims=1)
+    end
     k_error = testSVM()
     global tot_error += k_error
 end
