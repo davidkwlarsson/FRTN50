@@ -134,8 +134,8 @@ for k = 0:9
         global x_train = x_data[50*(k+1)+1:end]
     end
     if k == 9
-        global y_train = y_data[1:end-49]
-        global x_train = x_data[1:end-49]
+        global y_train = y_data[1:end-50]
+        global x_train = x_data[1:end-50]
     elseif k > 0
         global y_train = cat(y_data[1:50*k], y_train, dims = 1)
         global x_train = cat(x_data[1:50*k], x_train, dims = 1)
