@@ -32,7 +32,7 @@ function prox_grad_method(x,y,beta_method = 1, mu = 0)
     dual = randn(N)
     res = zeros(ITER)
     if beta_method == 3
-        beta_k = (1-math.sqrt(mu*gamma))/(1+math.sqrt(mu*gamma))
+        beta_k = (1-sqrt(mu*gamma))/(1+sqrt(mu*gamma))
     end
     delta = zeros(N)
     tk = 0
@@ -40,7 +40,7 @@ function prox_grad_method(x,y,beta_method = 1, mu = 0)
         if beta_method == 1
             beta_k = (i-3)/(i+1)
         elseif beta_method == 2
-            tk1 = (1+math.sqrt(1+4*(tk^2)))/2
+            tk1 = (1+sqrt(1+4*(tk^2)))/2
             beta = (tk - 1)/tk1
         end
         dual = dual .+ beta_k.*delta
@@ -63,4 +63,4 @@ sigma = 0.5
 #configuration of (lambda, sigma) = (0.1, 2) (0.001, 0.5) (0.00001, 0.25)
 println("lambda : " ,lambda,"     sigma: ", sigma)
 x_test, y_test = svm_test_1() #best = (0.0001, 0.5)
-prox_grad_method(x_train, y_train)
+prox_grad_method(x_train, y_train, 3, 100000000)
