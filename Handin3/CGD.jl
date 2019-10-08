@@ -66,4 +66,4 @@ dual_init = randn(length(y_train))
 dual_sol, res= prox_grad_method(dual_init, x_train, y_train, 0, 0, 0, false, 100000)
 
 coord_grad = false
-coord_prox_grad_method(dual_init,x_train, y_train, true, dual_sol, true,1000000)
+coord_prox_grad_method(dual_init,x_train, y_train, coord_grad, dual_sol, true,1000000)

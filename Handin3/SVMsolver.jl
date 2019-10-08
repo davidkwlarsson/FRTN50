@@ -84,4 +84,4 @@ dual_sol, res= prox_grad_method(dual_init, x_train, y_train, 0, 0, 0, false, 100
 
 
 
-prox_grad_method(dual_init, x_train, y_train, 3, 30, dual_sol, true, 10000)
+prox_grad_method(dual_init, x_train, y_train, 1, 30, dual_sol, true, 10000)
