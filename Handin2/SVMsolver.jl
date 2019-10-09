@@ -4,10 +4,6 @@ using ProximalOperators, LinearAlgebra, Plots, Random, Statistics
 include("problem.jl")
 
 
-x_train, y_train = svm_train()
-lambda = 0.001
-sigma = 0.5
-
 
 function GaussKernelMatrix(x)
     N = length(x)
@@ -81,8 +77,9 @@ function testSVM()
     return errors
 end
 
-lambda = 0.0001
-sigma = 0.5
+x_train, y_train = svm_train()
+lambda = 0.1
+sigma = 1
 
 #configuration of (lambda, sigma) = (0.1, 2) (0.001, 0.5) (0.00001, 0.25)
 println("lambda : " ,lambda,"     sigma: ", sigma)
@@ -115,7 +112,11 @@ x_test = x_data[end-99:end]
 
 println("Running SVM using hold out with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
-testSVM()  # Data from some runs : 11 18  11 18 9 11 9
+testSVM()  # Data from some runs: [10 17 10 14 16 17 13 13 12 10]
+            # mean : 13.2        var : 7.73333333
+
+errs_hold = [10 17 10 14 16 17 13 13 12 10]./100
+
 println("Running SVM using k-fold with parameters: (lambda , gamma) = ("
             , lambda, " , " ,sigma ,") : ..." )
 
@@ -147,4 +148,11 @@ for k = 0:9
 end
 
 print("Average error over 10 iters = ", tot_error/10)
-# Data for some runs : 1.3 1.1 1.1 1.2 1.0
+# Data for some runs : [6.6 6.3 6.0 6.6 6.2 6.9 7.1 6.6 6.2 6.4]
+errs_kfold = [6.6 6.3 6.0 6.6 6.2 6.9 7.1 6.6 6.2 6.4]./50
+
+mean(errs_hold)
+mean(errs_kfold)
+
+var(errs_hold)
+var(errs_kfold)
