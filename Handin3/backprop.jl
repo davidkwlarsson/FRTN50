@@ -3,13 +3,18 @@ using LinearAlgebra, Statistics, Random
 # We define some useful activation functions
 sigmoid(x) = exp(x)/(1 + exp(x))
 #+++ relu
+relu(x) = max.(0, x)
 #+++ leakyrelu
+leakyrelu(x) = max.(x*0.2, x)
 
 # And methods to calculate their derivatives
 derivative(f::typeof(sigmoid), x::Float64) = sigmoid(x)*(1-sigmoid(x))
 derivative(f::typeof(identity), x::Float64) = one(x)
 #+++ derivative of relu
+# p(x=0) = 0?
+derivative(f::typeof(relu), x::Float64) = max(0, sign(x))
 #+++ derivative of leakyrelu
+derivative(f::typeof(leakyrelu), x::Float64) = max(-sign(x) * 0.2, sign(x))
 
 # Astract type, all layers will be a subtype of `Layer`
 abstract type Layer{T} end
@@ -26,6 +31,8 @@ struct Dense{T, F<:Function} <: Layer{T}
     ∇b::Vector{T}   # (∂J/db)ᵀ
     δ::Vector{T}    # dJ/dz
 end
+
+
 
 """ layer = Dense(nout, nin, σ::F=sigmoid, W0 = 1.0, Wstd = 0.1, b0=0.0, bstd = 0.1)
     Dense layer for `σ(W*x+b)` with nout outputs and nin inputs, with activation function σ.
@@ -46,9 +53,9 @@ end
     Store the input to the activation function in l.x and the output in l.out. """
 function (l::Dense)(z)
     #+++ Implement the definition of a Dense layer here
-    #+++
-    #+++
-    #+++
+    l.x .= l.W * z + l.b
+    l.out .= l.σ.(l.x)
+    return l.out
 end
 
 # A network is just a sequence of layers
@@ -60,10 +67,11 @@ end
     Comute the result of applying each layer in a network to the previous output. """
 function (n::Network)(z)
     #+++ Implement evaluation of a network here
-    #+++
-    #+++
-    #+++
-    #+++
+    input = z
+    for l in n.layers
+        input = l(input)
+    end
+    return input
 end
 
 """ δ = backprop!(l::Dense, δnext, zin)
@@ -72,8 +80,11 @@ end
     and save l.∂W = ∂L/∂Wᵢ and l.∇b = (∂L/∂bᵢ)ᵀ """
 function backprop!(l::Dense, δnext, zin)
     #+++ Implement back-propagation of a dense layer here
-    #+++
-    #+++
+    # Skipped the derivations but this should be the final expression
+    # z_hat = l.x
+    l.∇b .= δnext .* derivative.(l.σ, l.x)
+    l.∂W .= l.∇b * transpose(zin)
+    l.δ .= transpose(l.W) * l.∇b
     return l.δ
 end
 
@@ -89,13 +100,16 @@ function backprop!(n::Network, input, ∂J∂y)
     # Iterate through layers, starting at the end
     for i in length(layers):-1:2
         #+++ Fill in the missing code here
-        #+++
+        zin = layers[i-1].out # Do we have access to this?
+        δ = backprop!(layers[i], δ, zin)
     end
     # To first layer, the input was `input`
     zin = input
     δ = backprop!(layers[1], δ, zin)
     return
 end
+
+
 
 # This can be used to get a list of all parameters and gradients from a Dense layer
 getparams(l::Dense) = ([l.W, l.b], [l.∂W, l.∇b])
@@ -117,6 +131,26 @@ end
 sumsquares(yhat,y) =  norm(yhat-y)^2
 # And its gradient with respect to yhat: L_{yhat}(yhat,y)
 derivative(::typeof(sumsquares), yhat, y) =  yhat - y
+
+function gradientstep!(n, lossfunc, x, y)
+    out = n(x)
+    # Calculate (∂L/∂out)ᵀ
+    ∇L = derivative(lossfunc, out, y)
+    # Backward pass over network
+    backprop!(n, x, ∇L)
+    # Get list of all parameters and gradients
+    parameters, gradients = getparams(n)
+    # For each parameter, take gradient step
+    for i = 1:length(parameters)
+        p = parameters[i]
+        g = gradients[i]
+        # Update this parameter with a small step in negative gradient
+        #→ direction
+        p .= p .- 0.001.*g
+        # The parameter p is either a W, or b so we broadcast to update all the
+        #→ elements
+    end
+end
 
 """ Structure for saving all the parameters and states needed for ADAM,
     as well as references to the parameters and gradients """
@@ -159,14 +193,13 @@ function update!(At::ADAMTrainer)
         # Get each of the stored values m, mhat, v, vhat for this parameter
         m, mh, v, vh = At.ms[i], At.mhs[i], At.vs[i], At.vhs[i]
 
-        # Update ADAM parameters
-        #+++
-        #+++
-        #+++
-        #+++
+        # Update ADAM parameters and Take the ADAM step
+        At.ms[i] = β1 * m + (1 + β1) * ∇p
+        At.mhs[i] = At.ms[i] / (1 - β1^t)
+        At.vs[i] = β2 * v + (1 + β2) * ∇p.^2
+        At.vhs[i] = At.vs[i] / (1 - β2^t)
+        At.params[i] .= p .- γ * At.mhs[i] ./ sqrt.(At.vhs[i] .+ ϵ)
 
-        # Take the ADAM step
-        #+++
     end
     At.t[] = t+1     # At.t is a reference, we update the value t like this
     return
@@ -184,14 +217,13 @@ function train!(n, alg, xs, ys, lossfunc)
         xi = xs[i]          # Get data
         yi = ys[i]          # And expected output
 
-        #+++
-        #+++
         #+++ Do a forward and backwards pass
         #+++ with `xi`, `yi, and
         #+++ update parameters using `alg`
-        #+++
-        #+++
-        #+++
+        out = n(xi)
+        ∇L = derivative(lossfunc, out, yi)
+        backprop!(n, xi, ∇L)
+        update!(alg)
 
         loss = lossfunc(out, yi)
         lossall += loss
@@ -226,7 +258,10 @@ fsol(x) = [min(3,norm(x)^2)]
 
 ### Define data, in range [-4,4]
 xs = [rand(1).*8 .- 4 for i = 1:2000]
+# no noise
 ys = [fsol(xi) for xi in xs]
+# noise
+# ys = [fsol(xi).+ 0.1.*randn(1) for xi in xs]
 # Test data
 testxs = [rand(1).*8 .- 4 for i = 1:1000]
 testys = [fsol(xi) for xi in testxs]
@@ -238,24 +273,33 @@ adam = ADAMTrainer(n, 0.95, 0.999, 1e-8, 0.0001)
 using Plots
 # Train once over the data set
 @time train!(n, adam, xs, ys, sumsquares)
-scatter(xs, [copy(n(xi)) for xi in xs])
+scatter(xs, [copy(n(xi)) for xi in xs], label="",
+        title="y-prediction after one epoch of training")
 
 # Train 100 times over the data set
-for i = 1:100
+for i = 1:90
     # Random ordering of all the data
     Iperm = randperm(length(xs))
     @time train!(n, adam, xs[Iperm], ys[Iperm], sumsquares)
 end
 
 # Plot real line and prediction
-plot(-4:0.01:4, [fsol.(xi)[1] for xi in -4:0.01:4], c=:blue)
+plot(-4:0.01:4, [fsol.(xi)[1] for xi in -4:0.01:4], c=:blue,
+    title="prediction after 1000 epochs of training", label="")
 scatter!(xs, ys, lab="", m=(:cross,0.2,:blue))
-scatter!(xs, [copy(n(xi)) for xi in xs], m=(:circle,0.2,:red))
+scatter!(xs, [copy(n(xi)) for xi in xs], m=(:circle,0.2,:red), label="")
 
 # We can calculate the mean error over the training data like this also
 getloss(n, xs, ys, sumsquares)
 # Loss over test data like this
 getloss(n, testxs, testys, sumsquares)
+# 1 epochs: båda seten får ca 1 error
+# 10 epochs: båda seten får ca 0.1 error
+# 100 epochs: båda seten får ca e-5 error
+# 100 epochs: båda seten får ca e-5 error (liite bättre)
+# Vi har typ konvergerat efter 100 itr.
+# kan inte överträna då vår funktion är orealistiskt perfekt
+
 
 # Plot expected line
 plot(-8:0.01:8, [fsol.(xi)[1] for xi in -8:0.01:8], c=:blue);
@@ -265,15 +309,24 @@ plot!(-8:0.01:8, [copy(n([xi]))[1] for xi in -8:0.01:8], c=:red)
 #########################################################
 #########################################################
 #########################################################
-### Task 4:
+### Task 4: GÖR ETT NYTT NÄTVÄRK
+# Addera noise och träna om, vad händer? kan vi overfitta? (träna för noiset)
+ys = [fsol(xi).+ 0.1.*randn(1) for xi in xs]
 
 getloss(n, xs, ys, sumsquares)
 getloss(n, testxs, testys, sumsquares)
+# 1 epochs: båda seten får ca 1 error
+# 10 epochs: train 0.01. test 0.004
+# 100 epochs: train 0.01. test 0.0005
+
+# Vi har typ konvergerat efter 100 itr.
+# kan inte överträna då vår funktion är orealistiskt perfekt
 #########################################################
 #########################################################
 #########################################################
 ### Task 5:
-
+# Dra ner träningsdatan fårn 2000 till 30 och träna om (med fler iter)
+# vad händer? vi borde få en imperfekt model då vi har bristfällig data.
 
 getloss(n, xs, ys, sumsquares)
 getloss(n, testxs, testys, sumsquares)
@@ -281,6 +334,8 @@ getloss(n, testxs, testys, sumsquares)
 #########################################################
 #########################################################
 ### Task 6:
+# återställ xs. ändra nätverket och träna om. sänk learning rate.
+# vad händer? varför?
 fsol(x) = [min(0.5,sin(0.5*norm(x)^2))]
 
 getloss(n, xs, ys, sumsquares)
@@ -289,3 +344,10 @@ getloss(n, testxs, testys, sumsquares)
 # Plotttnig that can be used for task 6:
 scatter3d([xi[1] for xi in xs], [xi[2] for xi in xs], [n(xi)[1] for xi in xs], m=(:blue,1, :cross, stroke(0, 0.2, :blue)), size=(1200,800));
 scatter3d!([xi[1] for xi in xs], [xi[2] for xi in xs], [yi[1] for yi in ys], m=(:red,1, :circle, stroke(0, 0.2, :red)), size=(1200,800))
+
+########################################################
+########################################################
+########################################################
+### Task 7:
+# återställ learning rate ocg gör om t6 fast med relu ist för leaky.
+# Vad händer? varför?
