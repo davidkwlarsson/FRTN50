@@ -258,10 +258,12 @@ fsol(x) = [min(3,norm(x)^2)]
 
 ### Define data, in range [-4,4]
 xs = [rand(1).*8 .- 4 for i = 1:2000]
+# Task 5
+# xs = [rand(1).*8 .- 4 for i = 1:30]
 # no noise
 ys = [fsol(xi) for xi in xs]
 # noise
-# ys = [fsol(xi).+ 0.1.*randn(1) for xi in xs]
+##ys = [fsol(xi).+ 0.1.*randn(1) for xi in xs]
 # Test data
 testxs = [rand(1).*8 .- 4 for i = 1:1000]
 testys = [fsol(xi) for xi in testxs]
@@ -277,7 +279,7 @@ scatter(xs, [copy(n(xi)) for xi in xs], label="",
         title="y-prediction after one epoch of training")
 
 # Train 100 times over the data set
-for i = 1:90
+for i = 1:10
     # Random ordering of all the data
     Iperm = randperm(length(xs))
     @time train!(n, adam, xs[Iperm], ys[Iperm], sumsquares)
@@ -285,10 +287,11 @@ end
 
 # Plot real line and prediction
 plot(-4:0.01:4, [fsol.(xi)[1] for xi in -4:0.01:4], c=:blue,
-    title="prediction after 1000 epochs of training", label="")
-scatter!(xs, ys, lab="", m=(:cross,0.2,:blue))
-scatter!(xs, [copy(n(xi)) for xi in xs], m=(:circle,0.2,:red), label="")
-
+    title="prediction after 1000 epochs of training", label="", ylims = (-0.2, 4))
+scatter!(xs[1], ys[1], m=(:cross,0.2,:blue), label="y train")
+scatter!(xs[2:end], ys[2:end], lab="", m=(:cross,0.2,:blue))
+scatter!(xs[1], copy(n(xs[1])), m=(:circle,0.2,:red), label="y_pred")
+scatter!(xs[2:end], [copy(n(xi)) for xi in xs[2:end]], m=(:circle,0.2,:red), label="")
 # We can calculate the mean error over the training data like this also
 getloss(n, xs, ys, sumsquares)
 # Loss over test data like this
@@ -296,15 +299,19 @@ getloss(n, testxs, testys, sumsquares)
 # 1 epochs: båda seten får ca 1 error
 # 10 epochs: båda seten får ca 0.1 error
 # 100 epochs: båda seten får ca e-5 error
-# 100 epochs: båda seten får ca e-5 error (liite bättre)
+# 1000 epochs: båda seten får ca e-5 error (liite bättre)
 # Vi har typ konvergerat efter 100 itr.
 # kan inte överträna då vår funktion är orealistiskt perfekt
 
 
 # Plot expected line
-plot(-8:0.01:8, [fsol.(xi)[1] for xi in -8:0.01:8], c=:blue);
+plot(-8:0.01:8, [fsol.(xi)[1] for xi in -8:0.01:8], c=:blue,
+        title="prediction after 1000 epochs of training", label="y true");
 # Plot full network result
-plot!(-8:0.01:8, [copy(n([xi]))[1] for xi in -8:0.01:8], c=:red)
+plot!(-8:0.01:8, [copy(n([xi]))[1] for xi in -8:0.01:8], c=:red,
+    label="y pred", ylims = (-0.2, 4))
+scatter!(xs[1], ys[1], m=(:cross,0.2,:blue), label="y train")
+scatter!(xs[2:end], ys[2:end], lab="", m=(:cross,0.2,:blue))
 
 #########################################################
 #########################################################
@@ -320,7 +327,6 @@ getloss(n, testxs, testys, sumsquares)
 # 100 epochs: train 0.01. test 0.0005
 
 # Vi har typ konvergerat efter 100 itr.
-# kan inte överträna då vår funktion är orealistiskt perfekt
 #########################################################
 #########################################################
 #########################################################
@@ -330,17 +336,54 @@ getloss(n, testxs, testys, sumsquares)
 
 getloss(n, xs, ys, sumsquares)
 getloss(n, testxs, testys, sumsquares)
+# få epochs ger inget vettigt.
+# 1000 epochs: train 0.01, test 0.05
+# 10000 epochs: train 0.002, test 0.008 typ optimalt tränad efter vår data
+# 100000 epochs: train 0.0007 test 0.02. Vi har övertränat nätverket
+
 #########################################################
 #########################################################
 #########################################################
 ### Task 6:
 # återställ xs. ändra nätverket och träna om. sänk learning rate.
 # vad händer? varför?
+
+### New network
+l1 = Dense(30, 2, relu, 0.0, 3.0, 0.0, 0.1)
+lis = [Dense(30, 30, relu, 0.0, 3.0, 0.0, 0.1) for i = 1:4]
+# Last layer has no activation function (identity)
+ln = Dense(1, 30, identity, 0.0, 1.0, 0.0, 0.1)
+n = Network([l1, lis..., ln])
+### New function
 fsol(x) = [min(0.5,sin(0.5*norm(x)^2))]
+
+### x in R2
+xs = [rand(2).*8 .- 4 for i = 1:2000]
+ys = [fsol(xi) for xi in xs]
+# Test data
+testxs = [rand(2).*8 .- 4 for i = 1:1000]
+testys = [fsol(xi) for xi in testxs]
+
+### Define algorithm, last input is learning rate
+adam = ADAMTrainer(n, 0.95, 0.999, 1e-8, 0.0001)
+### Train and plot
+using Plots
+
+# Train 100 times over the data set
+for i = 1:900
+    # Random ordering of all the data
+    Iperm = randperm(length(xs))
+    @time train!(n, adam, xs[Iperm], ys[Iperm], sumsquares)
+end
 
 getloss(n, xs, ys, sumsquares)
 getloss(n, testxs, testys, sumsquares)
-
+# lr = 1e-4
+# 100 epochs: 0.025, 0.031, 0.002 nu
+# 1000 epochs: 0.00044, 0.00066
+# lr = 1e-5
+# 100 epochs: 0.32, 0.32
+# 1000 epochs 0.0030, 0.0038
 # Plotttnig that can be used for task 6:
 scatter3d([xi[1] for xi in xs], [xi[2] for xi in xs], [n(xi)[1] for xi in xs], m=(:blue,1, :cross, stroke(0, 0.2, :blue)), size=(1200,800));
 scatter3d!([xi[1] for xi in xs], [xi[2] for xi in xs], [yi[1] for yi in ys], m=(:red,1, :circle, stroke(0, 0.2, :red)), size=(1200,800))
@@ -351,3 +394,8 @@ scatter3d!([xi[1] for xi in xs], [xi[2] for xi in xs], [yi[1] for yi in ys], m=(
 ### Task 7:
 # återställ learning rate ocg gör om t6 fast med relu ist för leaky.
 # Vad händer? varför?
+getloss(n, xs, ys, sumsquares)
+getloss(n, testxs, testys, sumsquares)
+# lr = 1e-4
+# 100 epochs: 0.11, 0.11
+# 1000 epochs:

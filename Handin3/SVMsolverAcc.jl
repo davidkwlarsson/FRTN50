@@ -111,4 +111,4 @@ end
 #always gives the same values bc mt
 x, y = svm_train()
 testSVM(x, y)
-savefig("task1.png")
+#savefig("task1.png")

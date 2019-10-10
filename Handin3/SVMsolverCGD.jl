@@ -26,7 +26,7 @@ function prox_grad_CGD(x, y, lambda, sigma, ITER, dual, gamma_method = 1)
     solutions_save[:,1] = dual
     idx = rand(1:N,ITER)
     if gamma_method == 2
-        gamma = 2/norm(Q,2)
+        gamma = 1/norm(Q,2)
     end
     ii = 1
     for i = 1:ITER
