@@ -53,8 +53,8 @@ function coord_prox_grad_method(dual_init,x,y,C_grad = false,dual_sol = 0, have_
             dual_prev = copy(dual)
         end
     end
-    display(plot(res, yaxis=("|| x^k - x* ||",:log),
-            xlabel = "Iterations"))
+    display(plot(res, title = "Residuals",yaxis=("||x^k - x*||",:log),
+            xlabel = "Iterations", label = "Coordinate wise gamma = " * string(coord_grad)))
     return dual, res
 end
 
@@ -65,5 +65,7 @@ dual_init = randn(length(y_train))
 
 dual_sol, res= prox_grad_method(dual_init, x_train, y_train, 0, 0, 0, false, 100000)
 
-coord_grad = false
+coord_grad = true
 coord_prox_grad_method(dual_init,x_train, y_train, coord_grad, dual_sol, true,1000000)
+
+savefig("CoordinateGD.png")

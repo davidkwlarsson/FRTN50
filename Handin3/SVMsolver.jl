@@ -63,8 +63,9 @@ function prox_grad_method(dual_init,x,y,beta_method = 1, mu = 0, dual_sol = 0, h
         dual = dual_1
     end
     if have_sol
-        display(plot(res, yaxis=("|| x^k - x* ||",:log),
-                xlabel = "Iterations", title = "Beta method : " * string(beta_method)))
+        display(plot!(res, yaxis=("||x^k - x*||",:log),
+                xlabel = "Iterations", title = "Residual to solution : "
+                , label = "beta metod = " * string(beta_method)))
     else
         display(plot(res, yaxis=("|| x^k+1 - x^k ||",:log),
                 xlabel = "Iterations", title = "Beta method : " * string(beta_method)))
@@ -83,5 +84,9 @@ dual_init = randn(length(x_train))
 dual_sol, res= prox_grad_method(dual_init, x_train, y_train, 0, 0, 0, false, 100000)
 
 
+prox_grad_method(dual_init, x_train, y_train, 0, 0, dual_sol, true, 10000)
 
-prox_grad_method(dual_init, x_train, y_train, 1, 30, dual_sol, true, 10000)
+
+prox_grad_method(dual_init, x_train, y_train, 3, 30, dual_sol, true, 10000)
+
+savefig("AllMethods.png")
