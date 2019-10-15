@@ -198,7 +198,7 @@ function update!(At::ADAMTrainer)
         At.mhs[i] = At.ms[i] / (1 - β1^t)
         At.vs[i] = β2 * v + (1 + β2) * ∇p.^2
         At.vhs[i] = At.vs[i] / (1 - β2^t)
-        At.params[i] .= p .- γ * At.mhs[i] ./ sqrt.(At.vhs[i] .+ ϵ)
+        At.params[i] .= p .- γ * At.mhs[i] ./ (sqrt.(At.vhs[i]) .+ ϵ)
 
     end
     At.t[] = t+1     # At.t is a reference, we update the value t like this
